@@ -1,0 +1,130 @@
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
+#include <cassert>
+#include <iostream>
+#include <unordered_set>
+#include <numeric>
+#include <vector>
+#include <utility>
+#include <set>
+#include <algorithm>
+#define ll long long
+#define MAX_NODES 1000000
+using namespace std;
+
+string S[2222];
+bool done[2002][2002];
+int ans[2002][2002];
+
+pair<int,int> GetNext(pair<int,int> curr) {
+    int x = curr.first;
+    int y = curr.second;
+    if (S[x][y]=='L') {
+        return {x,y-1};
+    }
+    if (S[x][y]=='R') {
+        return {x,y+1};
+    }
+    if (S[x][y]=='D') {
+        return {x+1,y};
+    }
+    if (S[x][y]=='U') {
+        return {x-1,y};
+    }
+    return {-1,-1};
+}
+
+bool InBounds(int x,int y, int n,int m) {
+    return (x>=0 && y >= 0 && x < n && y < m);
+}
+
+int main() {
+    int T;
+    cin>>T;
+    for(int t=1;t<=T;t++) {
+        int n,m;
+        cin>>n>>m;
+        for(int i=0;i<n;i++) {
+            cin>>S[i];
+        }
+        
+        for(int i=0;i<n;i++) {
+            for(int j=0;j<m;j++) {
+                done[i][j]=false;
+                ans[i][j]=-1;
+            }
+        }
+        
+        for(int i=0;i<n;i++) {
+            for(int j=0;j<m;j++) {
+                if (done[i][j]) continue;
+                set<pair<int,int>> curr_path;
+                vector<pair<int,int>> ids;
+                pair<int,int> curr = {i,j};
+                while(1) {
+                    int cx,cy;
+                    std::tie(cx,cy)=curr;
+                    if (!InBounds(cx, cy, n, m)) {
+                        for(int j=0;j<ids.size();j++) {
+                            int x,y;
+                            std::tie(x,y)=ids[j];
+                            ans[x][y]=ids.size()-j;
+                        }
+                        break;
+                    }
+                    
+
+                    if (done[cx][cy] && curr_path.find(curr) == curr_path.end()) {
+                        for(int j=0;j<ids.size();j++) {
+                            int x,y;
+                            std::tie(x,y)=ids[j];
+                            ans[x][y]=ids.size()-j+ans[cx][cy];
+                        }
+                        break;
+                    }
+                    
+                    if (done[cx][cy] && curr_path.find(curr) != curr_path.end()) {
+                        
+                        for(int j=0;j<ids.size();j++) {
+                            int x,y;
+                            std::tie(x,y)=ids[j];
+                            if (x == cx && y == cy) {
+                                // j to ids.size()-1 is a cycle
+                                for(int k=j;k<ids.size();k++) {
+                                    ans[ids[k].first][ids[k].second]=ids.size()-j;
+                                }
+                                for(int k=0;k<j;k++) {
+                                    ans[ids[k].first][ids[k].second]=ids.size()-k;
+                                }
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    
+                    done[cx][cy]=true;
+                    curr_path.insert(curr);
+                    ids.push_back(curr);
+                    curr = GetNext(curr);
+                }
+            }
+        }
+        
+        int opt_i,opt_j;
+        int maxx = -1;
+        for(int i=0;i<n;i++) {
+            for(int j=0;j<m;j++) {
+                if (ans[i][j]>maxx) {
+                    maxx = ans[i][j];
+                    opt_i=i;
+                    opt_j=j;
+                }
+            }
+        }
+        printf("%d %d %d\n",opt_i+1,opt_j+1,maxx);
+        
+        
+    }
+}
